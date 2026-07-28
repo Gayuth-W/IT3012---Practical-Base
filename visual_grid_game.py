@@ -6,7 +6,7 @@ import tkinter as tk
 class VisualGridHuntGame:
     """A flexible Pacman-style grid environment with support for configurable opponents and larger scales."""
 
-    def __init__(self, width=10, height=10, num_food=10, num_opponents=2, custom_walls=None):
+    def __init__(self, width=10, height=10, num_traps=3, num_food=10, num_opponents=2, custom_walls=None):
         self.width = width
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
@@ -34,7 +34,6 @@ class VisualGridHuntGame:
             op_pos = [ox, oy]
             if tuple(op_pos) != (0, 0) and tuple(op_pos) not in self.walls and tuple(op_pos) not in self.food_positions:
                 self.opponents.append(op_pos)
-
         # Step 2.1
         self.toxic_traps = set()
         while len(self.toxic_traps) < num_traps:
@@ -56,6 +55,7 @@ class VisualGridHuntGame:
             'opponent_positions': [list(op) for op in self.opponents],
             'smells_food': tuple(self.agent_pos) in self.food_positions,
             'hit_wall': tuple(self.agent_pos) in self.walls,
+            'smells_toxin': tuple(self.agent_pos) in self.toxic_traps,  # Step 2.2            
             'collision': self.collision,
             'score': self.score,
             'remaining_food': len(self.food_positions)
@@ -162,6 +162,7 @@ class GridGameGUI:
             self.canvas.create_polygon(
                 cx, cy - r, cx + r, cy, cx, cy + r, cx - r, cy,
                 fill="#7e22ce", outline="#4c1d95"
+            )
         
         for fx, fy in self.env.food_positions:
             offset = self.cell_size * 0.25
