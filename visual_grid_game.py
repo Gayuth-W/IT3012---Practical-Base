@@ -154,6 +154,15 @@ class GridGameGUI:
                     self.canvas.create_text(x1 + self.cell_size / 2, y1 + self.cell_size / 2, text="W", fill="white",
                                             font=("Arial", 8, "bold"))
 
+        # Step 2.3
+        for tx, ty in self.env.toxic_traps:
+            cx = tx * self.cell_size + self.cell_size / 2
+            cy = (self.env.height - 1 - ty) * self.cell_size + self.cell_size / 2
+            r = self.cell_size * 0.3
+            self.canvas.create_polygon(
+                cx, cy - r, cx + r, cy, cx, cy + r, cx - r, cy,
+                fill="#7e22ce", outline="#4c1d95"
+        
         for fx, fy in self.env.food_positions:
             offset = self.cell_size * 0.25
             x1 = fx * self.cell_size + offset
