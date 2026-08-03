@@ -13,6 +13,66 @@ class SimpleReflexAgent:
 
         else:
             return "Up"
+
+class ModelBasedAgent:
+    def __init__(self):
+        self.visited_cells = set()
+        self.last_action = None
+
+    def sense_and_act(self, percept, current_position):
+
+        current = tuple(current_position)
+
+        # Remember location
+        self.visited_cells.add(current)
+
+        x, y = current
+
+        left_cell = (x - 1, y)
+        right_cell = (x + 1, y)
+        up_cell = (x, y + 1)
+        down_cell = (x, y - 1)
+
+
+        # Food
+        if percept["food_here"]:
+            action = "Suck"
+
+
+        # Wall ahead + left already visited
+        elif percept["wall_up"]:
+
+            if not percept["wall_left"] and left_cell not in self.visited_cells:
+                action = "Left"
+
+            elif not percept["wall_right"] and right_cell not in self.visited_cells:
+                action = "Right"
+
+            else:
+                action = "Down"
+
+
+        # Avoid loops
+        elif up_cell in self.visited_cells:
+
+            if not percept["wall_right"] and right_cell not in self.visited_cells:
+                action = "Right"
+
+            elif not percept["wall_left"] and left_cell not in self.visited_cells:
+                action = "Left"
+
+            else:
+                action = "Down"
+
+
+        else:
+            action = "Up"
+
+
+        self.last_action = action
+
+        return action
+
 class VisualGridHuntGame:
     """A flexible Pacman-style grid environment with support for configurable opponents and larger scales."""
 
@@ -20,7 +80,7 @@ class VisualGridHuntGame:
         self.width = width
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
-        self.agent = SimpleReflexAgent()
+        self.agent = ModelBasedAgent()
 
         if custom_walls is not None:
             self.walls = set(custom_walls)
@@ -62,19 +122,32 @@ class VisualGridHuntGame:
 
     def get_percept(self) -> dict:
         x, y = self.agent_pos
-
-        ahead = (x, y + 1)
-
-        wall_ahead = (
-            ahead[0] < 0 or ahead[0] >= self.width or
-            ahead[1] < 0 or ahead[1] >= self.height or
-            ahead in self.walls
-        )
-
+        
         return {
-            "wall_ahead": wall_ahead,
+            "wall_up": (
+                y + 1 >= self.height or 
+                (x, y + 1) in self.walls
+            ),
+
+            "wall_down": (
+                y - 1 < 0 or 
+                (x, y - 1) in self.walls
+            ),
+
+            "wall_left": (
+                x - 1 < 0 or 
+                (x - 1, y) in self.walls
+            ),
+
+            "wall_right": (
+                x + 1 >= self.width or 
+                (x + 1, y) in self.walls
+            ),
+
             "food_here": (x, y) in self.food_positions,
+
             "toxin_here": (x, y) in self.toxic_traps,
+
             "collision": self.collision
         }
 
@@ -208,7 +281,7 @@ class GridGameGUI:
         def step():
             if not self.env.is_done():
                 percept = self.env.get_percept()
-                action = self.env.agent.sense_and_act(percept)
+                action = self.env.agent.sense_and_act(percept, self.env.agent_pos)
                 self.env.execute_action(action)
 
                 self.draw_grid()
