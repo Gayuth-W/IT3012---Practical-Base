@@ -2,7 +2,17 @@
 import random
 import tkinter as tk
 
+class SimpleReflexAgent:
+    def sense_and_act(self, percept):
 
+        if percept["food_here"]:
+            return "Suck"
+
+        elif percept["wall_ahead"]:
+            return "Left"
+
+        else:
+            return "Up"
 class VisualGridHuntGame:
     """A flexible Pacman-style grid environment with support for configurable opponents and larger scales."""
 
@@ -10,6 +20,7 @@ class VisualGridHuntGame:
         self.width = width
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
+        self.agent = SimpleReflexAgent()
 
         if custom_walls is not None:
             self.walls = set(custom_walls)
@@ -196,7 +207,8 @@ class GridGameGUI:
 
         def step():
             if not self.env.is_done():
-                action = random.choice(['Up', 'Down', 'Left', 'Right'])
+                percept = self.env.get_percept()
+                action = self.env.agent.sense_and_act(percept)
                 self.env.execute_action(action)
 
                 self.draw_grid()
