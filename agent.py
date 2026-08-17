@@ -13,6 +13,11 @@ class GreedyGridAgent:
         return random.choice(self.actions_pool)
 
 class SearchAgent:
+
+    def __init__(self):
+        self.plan = []
+        self.active_algo = "BFS"
+
     def get_neighbors(self, state, grid_size, walls):
         x, y = state
         width, height = grid_size
@@ -99,3 +104,60 @@ class SearchAgent:
                     heapq.heappush(frontier, (new_cost, next_state, new_path))
 
         return []
+
+    def sense_and_act(self, percept, agent_pos=None):
+        if agent_pos is None:
+            agent_pos = percept["agent_pos"]
+
+        start = tuple(agent_pos)
+        grid_size = tuple(percept["grid_size"])
+        walls = set(percept["walls"])
+        all_food = percept["all_food"]
+
+        if not all_food:
+            return "Stay"
+
+        if not self.plan:
+            closest_food = min(
+                all_food,
+                key=lambda food: (
+                    abs(food[0] - start[0])
+                    + abs(food[1] - start[1])
+                ),
+            )
+
+            goal = tuple(closest_food)
+
+            if self.active_algo == "BFS":
+                self.plan = self.bfs_search(
+                    start,
+                    goal,
+                    grid_size,
+                    walls,
+                )
+
+            elif self.active_algo == "DFS":
+                self.plan = self.dfs_search(
+                    start,
+                    goal,
+                    grid_size,
+                    walls,
+                )
+
+            elif self.active_algo == "UCS":
+                self.plan = self.ucs_search(
+                    start,
+                    goal,
+                    grid_size,
+                    walls,
+                )
+
+            else:
+                raise ValueError(
+                    f"Unknown algorithm: {self.active_algo}"
+                )
+
+        if self.plan:
+            return self.plan.pop(0)
+
+        return "Stay"

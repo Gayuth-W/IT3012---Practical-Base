@@ -1,7 +1,7 @@
 # visual_grid_game.py
 import random
 import tkinter as tk
-
+from agent import SearchAgent
 class SimpleReflexAgent:
     def sense_and_act(self, percept):
 
@@ -80,7 +80,7 @@ class VisualGridHuntGame:
         self.width = width
         self.height = height
         self.agent_pos = [0, 0]  # Starting position (x, y)
-        self.agent = ModelBasedAgent()
+        self.agent = SearchAgent()
 
         if custom_walls is not None:
             self.walls = set(custom_walls)
