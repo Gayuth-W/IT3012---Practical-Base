@@ -124,6 +124,12 @@ class VisualGridHuntGame:
         x, y = self.agent_pos
         
         return {
+            "grid_size": (self.width, self.height),
+
+            "walls": list(self.walls),
+
+            "all_food": list(self.food_positions),
+
             "wall_up": (
                 y + 1 >= self.height or 
                 (x, y + 1) in self.walls
