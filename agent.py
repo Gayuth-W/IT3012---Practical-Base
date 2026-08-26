@@ -18,7 +18,7 @@ class SearchAgent:
 
     def __init__(self):
         self.plan = []
-        self.active_algo = "BFS"
+        self.active_algo = "AStar"
         
     def manhattan_distance(self, pos, goal):
         x1, y1 = pos
@@ -126,14 +126,17 @@ class SearchAgent:
         start = tuple(agent_pos)
         grid_size = tuple(percept["grid_size"])
         walls = set(percept["walls"])
-        all_food = percept["all_food"]
+        remaining_food = percept.get(
+            "remaining_food",
+            percept.get("all_food", []),
+        )
 
-        if not all_food:
+        if not remaining_food:
             return "Stay"
 
         if not self.plan:
             closest_food = min(
-                all_food,
+                remaining_food,
                 key=lambda food: (
                     abs(food[0] - start[0])
                     + abs(food[1] - start[1])
@@ -166,6 +169,15 @@ class SearchAgent:
                     walls,
                 )
 
+            elif self.active_algo == "AStar":
+                    self.plan = self.astar_search(
+                    start,
+                    goal,
+                    walls,
+                    grid_size,
+                    heuristic_type="manhattan"
+                )   
+            
             else:
                 raise ValueError(
                     f"Unknown algorithm: {self.active_algo}"
