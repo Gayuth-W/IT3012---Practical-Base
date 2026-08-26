@@ -2,6 +2,8 @@
 
 from collections import deque
 import heapq
+import math
+import random
 
 class GreedyGridAgent:
     """A simple agent that tries to move around systematically to clear the grid."""
@@ -17,6 +19,18 @@ class SearchAgent:
     def __init__(self):
         self.plan = []
         self.active_algo = "BFS"
+        
+    def manhattan_distance(self, pos, goal):
+        x1, y1 = pos
+        x2, y2 = goal
+
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    def euclidean_distance(self, pos, goal):
+        x1, y1 = pos
+        x2, y2 = goal
+
+        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)        
 
     def get_neighbors(self, state, grid_size, walls):
         x, y = state
@@ -161,3 +175,21 @@ class SearchAgent:
             return self.plan.pop(0)
 
         return "Stay"
+    
+if __name__ == "__main__":
+    agent = SearchAgent()
+
+    start_position = (0, 0)
+    goal_position = (3, 4)
+
+    # Manhattan Distance: 7
+    print(
+    "Manhattan Distance:",
+    agent.manhattan_distance(start_position, goal_position),
+    )
+
+    # Euclidean Distance: 5.0
+    print(
+    "Euclidean Distance:",
+    agent.euclidean_distance(start_position, goal_position),
+    )    
