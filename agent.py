@@ -175,6 +175,60 @@ class SearchAgent:
             return self.plan.pop(0)
 
         return "Stay"
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+        
+        """Find a path from start_pos to goal_pos using A* search."""
+        if heuristic_type == "manhattan":
+            heuristic = self.manhattan_distance
+        elif heuristic_type == "euclidean":
+            heuristic = self.euclidean_distance
+        else:
+            raise ValueError(
+                "heuristic_type must be 'manhattan' or 'euclidean'"
+            )
+
+        priority_queue = []
+        reached_states = set()
+
+        start_g_cost = 0
+        start_h_cost = heuristic(start_pos, goal_pos)
+        start_f_cost = start_g_cost + start_h_cost
+
+        heapq.heappush(
+            priority_queue,
+            (start_f_cost, start_g_cost, start_pos, []),
+        )   
+        
+        while priority_queue:
+            f_cost, g_cost, current_pos, path_taken = heapq.heappop(
+                priority_queue
+            )
+
+            if current_pos == goal_pos:
+                return path_taken
+
+            if current_pos in reached_states:
+                continue
+
+            reached_states.add(current_pos)
+
+            for action, neighbor in self.get_neighbors(
+                current_pos,
+                grid_size,
+                walls,
+            ):
+                if neighbor not in reached_states:
+                    new_g_cost = g_cost + 1
+                    new_h_cost = heuristic(neighbor, goal_pos)
+                    new_f_cost = new_g_cost + new_h_cost
+                    new_path = path_taken + [action]
+
+                    heapq.heappush(
+                        priority_queue,
+                        (new_f_cost, new_g_cost, neighbor, new_path),
+                    )
+
+        return []        
     
 if __name__ == "__main__":
     agent = SearchAgent()
