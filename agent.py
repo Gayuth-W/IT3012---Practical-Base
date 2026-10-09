@@ -5,6 +5,8 @@ import heapq
 import math
 import random
 
+from logic_engine import KnowledgeBase
+
 class GreedyGridAgent:
     """A simple agent that tries to move around systematically to clear the grid."""
 
@@ -19,7 +21,27 @@ class SearchAgent:
     def __init__(self):
         self.plan = []
         self.active_algo = "AStar"
-        
+
+        self.kb = KnowledgeBase()
+        self.kb.tell_rule(['TargetVisible', 'HasDust'], 'SafeToEngage')
+        self.kb.tell_rule(['SafeToEngage', 'BloodseekerMissing'], 'Retreat')
+
+    def is_feasible(self, tile, tile_facts):
+        """Return False if the KB deduces Retreat for this tile.
+
+        Reachability (walls, grid bounds) is a physical property already handled
+        by get_neighbors. Feasibility is a LOGICAL property, proved here by
+        forward chaining over that tile's percepts.
+        """
+        self.kb.clear_facts()
+
+        for fact in tile_facts.get(tile, []):
+            self.kb.tell_fact(fact)
+
+        self.kb.forward_chain()
+
+        return 'Retreat' not in self.kb.facts
+
     def manhattan_distance(self, pos, goal):
         x1, y1 = pos
         x2, y2 = goal
@@ -170,14 +192,20 @@ class SearchAgent:
                 )
 
             elif self.active_algo == "AStar":
+                    tile_facts = {
+                        (1, 0): ['TargetVisible', 'HasDust', 'BloodseekerMissing'],
+                        (0, 1): ['TargetVisible', 'HasDust'],
+                    }
+
                     self.plan = self.astar_search(
                     start,
                     goal,
                     walls,
                     grid_size,
-                    heuristic_type="manhattan"
-                )   
-            
+                    heuristic_type="manhattan",
+                    tile_facts=tile_facts
+                )
+
             else:
                 raise ValueError(
                     f"Unknown algorithm: {self.active_algo}"
@@ -187,9 +215,12 @@ class SearchAgent:
             return self.plan.pop(0)
 
         return "Stay"
-    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
-        
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan', tile_facts=None):
+
         """Find a path from start_pos to goal_pos using A* search."""
+        if tile_facts is None:
+            tile_facts = {}
+
         if heuristic_type == "manhattan":
             heuristic = self.manhattan_distance
         elif heuristic_type == "euclidean":
@@ -230,6 +261,9 @@ class SearchAgent:
                 walls,
             ):
                 if neighbor not in reached_states:
+                    if not self.is_feasible(neighbor, tile_facts):
+                        continue
+
                     new_g_cost = g_cost + 1
                     new_h_cost = heuristic(neighbor, goal_pos)
                     new_f_cost = new_g_cost + new_h_cost
@@ -248,14 +282,12 @@ if __name__ == "__main__":
     start_position = (0, 0)
     goal_position = (3, 4)
 
-    # Manhattan Distance: 7
     print(
     "Manhattan Distance:",
     agent.manhattan_distance(start_position, goal_position),
     )
 
-    # Euclidean Distance: 5.0
     print(
     "Euclidean Distance:",
     agent.euclidean_distance(start_position, goal_position),
-    )    
+    )
